@@ -32,6 +32,12 @@ class BackgroundService(threading.Thread):
         threshold = float(threshold)
         value = float(value)
         
+        if value < expected:
+            inverted = []
+            for i in range(len(color2)):
+                inverted.append(255-color2[i])
+            color2 = inverted
+        
         total_distance = threshold - expected
         distance_from_expected = abs(value - expected)
         blend_ratio = distance_from_expected / total_distance
