@@ -42,6 +42,8 @@ class LHFilter:
                     #print(self.rooms[key]["controllermetrics"])
                     if "coretemperature" in self.rooms[key]["controllermetrics"]:
                         rooms[key] = float(self.rooms[key]["controllermetrics"]["coretemperature"][:4])/100
+                    elif "temperature" in self.rooms[key]["controllermetrics"]:
+                        rooms[key] = float(self.rooms[key]["controllermetrics"]["temperature"]) + 20 if float(self.rooms[key]["controllermetrics"]["temperature"]) != 0 else None
                     else:
                         rooms[key] = None
             case "voltage":
