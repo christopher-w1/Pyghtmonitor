@@ -185,7 +185,7 @@ class GUI(tk.Tk):
                 y = j * self.scale_y + yoff
                 color = "white"
                 if responding and label not in responding:
-                    color = "darkred" if blinker % 2 == 0 else"darkgrey"
+                    color = "#e00" if blinker % 2 == 0 else"darkgrey"
                     
                 if last != label:
                     #self.canvas.create_rectangle(x, y, x+self.scale_x*(left_bound-i)-1, y+0.5*self.scale_y+1, fill=None, outline="black")
