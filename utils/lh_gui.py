@@ -47,6 +47,7 @@ def load_from_file(filename="appconfig.json"):
 class GUI(tk.Tk):
     def __init__(self):
         super().__init__()
+        super().title("Lighthouse Monitor - Inactive")
         
         self.scale_y = 40
         self.scale_x = 20
@@ -62,6 +63,7 @@ class GUI(tk.Tk):
 
         frame = tk.Frame(self)
         frame.grid(row=0, column=1, padx=10, pady=10)
+        
         
         #default_font = frame.font.nametofont("TkDefaultFont")
         #bold_font = default_font.copy()
@@ -102,17 +104,17 @@ class GUI(tk.Tk):
         separator = ttk.Separator(frame, orient='horizontal')
         separator.grid(row=10, column=1, columnspan=2, sticky="ew", padx=5, pady=5)
         
-        self.output_text = tk.Text(frame, wrap="word", width=30, height = 8)
+        self.output_text = tk.Text(frame, wrap="word", width=30, height = 8, state="disabled")
         self.output_text.grid(row=11, column=1, columnspan=2, rowspan=1, sticky="nsew", padx=5, pady=5)
         
         separator = ttk.Separator(frame, orient='horizontal')
         separator.grid(row=12, column=1, columnspan=2, sticky="ew", padx=5, pady=5)
         
-        start_button = ttk.Button(frame, text="Start Monitoring", command=self.start_service)
-        start_button.grid(row=14, column=1, columnspan=1, sticky="esw", padx=20, pady=5)
+        self.start_button = ttk.Button(frame, text="Start Monitoring", command=self.start_service)
+        self.start_button.grid(row=14, column=1, columnspan=2, sticky="esw", padx=20, pady=5)
         
-        stop_button = ttk.Button(frame, text="Stop Monitoring", command=self.stop_service)
-        stop_button.grid(row=14, column=2, columnspan=1, sticky="esw", padx=20, pady=5)
+        #stop_button = ttk.Button(frame, text="Stop Monitoring", command=self.stop_service)
+        #stop_button.grid(row=14, column=2, columnspan=1, sticky="esw", padx=20, pady=5)
         
 
         
@@ -133,12 +135,15 @@ class GUI(tk.Tk):
         
         self.framequeue = queue.Queue()
         self.service = None
-        self.monitoring = True
+        self.monitoring = False
+        self.timeout = 10
         
     def put_text(self, message, delete=False):
         # Hier kannst du den Text hinzufügen, den du ausgeben möchtest
+        self.output_text.config(state="normal")
         if delete: self.output_text.delete("1.0", tk.END)
         self.output_text.insert(tk.END, f"{message}\n")
+        self.output_text.config(state="disabled")
 
         
     def load_settings(self):
@@ -202,6 +207,11 @@ class GUI(tk.Tk):
         except queue.Empty:
             # Wenn die Queue leer ist, setze den Text entsprechend
             self.put_text("Waiting for response...")
+            self.timeout -= 1
+            if self.timeout == 0:
+                self.timeout = 10
+                self.put_text("Server not responding.", delete=True)
+                self.stop_service()
         finally:
             # Führe diese Funktion erneut nach 1000 Millisekunden (1 Sekunde) aus
             if self.monitoring:
@@ -282,27 +292,34 @@ class GUI(tk.Tk):
         save_to_file(self.settings)
         
     def start_service(self):
-        self.monitoring = True
-        self.settings["keep_running"] = True
-        save_to_file(self.settings)
-        self.framequeue = queue.Queue()
-        self.service = BackgroundService(self.framequeue)
-        self.thread = threading.Thread(target=self.service.run)
-        self.thread.start()  # Thread starten
-        self.put_text("Background service started successfully.")
-        self.update_queue_content()
+        if not self.monitoring:
+            self.start_button.config(text="Stop Monitoring", command=self.stop_service)
+            self.monitoring = True
+            self.settings["keep_running"] = True
+            save_to_file(self.settings)
+            self.framequeue = queue.Queue()
+            self.service = BackgroundService(self.framequeue)
+            self.thread = threading.Thread(target=self.service.run)
+            self.thread.start()  # Thread starten
+            self.put_text("Background service started successfully.", delete=True)
+            self.update_queue_content()
+            super().title("Lighthouse Monitor - LIVE")
+        else:
+            self.stop_service
         
     def stop_service(self):
+        self.start_button.config(text="Start Monitoring", command=self.start_service)
         self.monitoring = False
         self.settings["keep_running"] = False
         self.put_text("Terminating service...")
         save_to_file(self.settings)
+        super().title("Lighthouse Monitor - Inactive")
         
     def on_close(self):
         # Aktion ausführen, wenn das Fenster geschlossen wird
         self.put_text("Terminating!")
         self.stop_service()
-        sleep(0.1)
+        sleep(0.2)
         self.destroy()
 
 if __name__ == "__main__":

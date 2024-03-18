@@ -102,6 +102,23 @@ class BackgroundService(threading.Thread):
     def stop(self):
         self.filter.stop()
         
+    def shorten(self, number):
+        if number.isnumeric():
+            return number
+        intlength = 0
+        for char in number:
+            if char.isnumeric():
+                intlength += 1
+            else:
+                break
+        maxlength = len(number)
+        for i in range(len(number), 0):
+            if number[i] == 0:
+                maxlength = i-1
+                break
+        new_length = min(intlength+3, maxlength)
+        return number[:new_length]
+        
     def min_avg_max_len(self, metrics: dict):
         valuelist = []
         min_val   = None
@@ -117,7 +134,7 @@ class BackgroundService(threading.Thread):
             #else:
             #    print(val, "is not numeric")
         avg = sum/len(valuelist) if sum else None
-        return (str(min_val)[:5], str(avg)[:5], str(max_val)[:5], len(valuelist), len(metrics))
+        return (self.shorten(str(min_val)), self.shorten(str(avg)), self.shorten(str(max_val)), len(valuelist), len(metrics))
     
     def run(self):
         #print("Test")

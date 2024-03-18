@@ -104,7 +104,13 @@ class LHFilter:
                 for key in self.rooms:
                     if metric.replace("_", "") in self.rooms[key]["controllermetrics"]:
                         raw_value = self.rooms[key]["controllermetrics"][metric.replace("_", "")]
-                        rooms[key] = float(raw_value) if raw_value else None
+                        if raw_value:
+                            if str(raw_value).isnumeric():
+                                rooms[key] = int(raw_value)
+                            else:
+                                rooms[key] = float(raw_value) 
+                        else: 
+                            rooms[key] = None
                     else:
                         rooms[key] = None
                     
