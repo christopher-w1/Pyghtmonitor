@@ -87,8 +87,8 @@ class LHFilter:
             case "n_lamps":
                 for key in self.rooms:
                     if "lampmetrics" in self.rooms[key]:
-                        raw_value = len(self.rooms[key]["lampmetrics"])
-                        rooms[key] = float(raw_value) if raw_value else None
+                        raw_value = self.rooms[key]["lampmetrics"]
+                        rooms[key] = int(len(raw_value)) if raw_value else None
                     else:
                         #print(self.rooms[key].keys())
                         rooms[key] = None#lamp_metrics

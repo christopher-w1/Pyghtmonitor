@@ -66,7 +66,7 @@ class WSConnector:
     def _handle_msg(self, ws, msg):
         if isinstance(msg, bytes):
             msg = unpackb(msg, strict_map_key=False)
-            #print(msg)
+            print(type(msg))
             self.last_message = str(msg)
 
     def construct_package(self, verb: str, payload_data):
