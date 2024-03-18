@@ -72,7 +72,7 @@ class NotQuiteJson:
                         stack[-1].append_key(str(key))
                     case _  :
                         # is a string
-                        if char.isalnum():
+                        if char.isalnum() or char==".":
                             if not stack[-1].is_string():
                                 # Initialize new string if necessary
                                 stack.append(self.JsonStruct(type=str, parent=stack[-1]))

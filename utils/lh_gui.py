@@ -14,12 +14,16 @@ preset = {
         "responding": [0, 1],
         "api_version": [1, 2],
         "core_temperature": [20.0, 50.0],
+        "board_temperature": [20.0, 50.0],
         "voltage": [10.0, 14.0], 
-        "current": [0.0, 1.2]
+        "current": [0.0, 1.2], 
+        "power": [0.0, 20.0], 
+        "ping": [0.0, 10.0]
     },
     "color_gradient": "Green->Red",
     "show_api": "All",
-    "keep_running": "False"
+    "keep_running": "False",
+    "normalize": "Custom Range"
 }
 
 def save_to_file(data, filename="appconfig.json"):
@@ -40,7 +44,7 @@ class GUI(tk.Tk):
     def __init__(self):
         super().__init__()
         
-        self.scale_y = 32
+        self.scale_y = 40
         self.scale_x = 20
         
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -61,11 +65,11 @@ class GUI(tk.Tk):
         bold_font = ("Helvetica", 10, "bold")
 
         ttk.Label(frame, text="Parameter").grid(row=0, column=1, padx=5, pady=5)
-        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "voltage", "current"])
+        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping"])
         self.dropdown1.grid(row=0, column=2, padx=5, pady=5)
 
-        ttk.Label(frame, text="Show Version").grid(row=1, column=1, padx=5, pady=5)
-        self.dropdown2 = ttk.Combobox(frame, values=["All", "1", "2"])
+        ttk.Label(frame, text="Range").grid(row=1, column=1, padx=5, pady=5)
+        self.dropdown2 = ttk.Combobox(frame, values=["Autorange", "Custom Range"])
         self.dropdown2.grid(row=1, column=2, padx=5, pady=5)
 
         ttk.Label(frame, text="Color Gradient").grid(row=2, column=1, padx=5, pady=5)
@@ -135,7 +139,9 @@ class GUI(tk.Tk):
         
     def load_settings(self):
         conf = load_from_file()
-        if conf: self.settings = conf
+        if conf: 
+            for key in conf:
+                self.settings[key] = conf[key]
         else: save_to_file(preset)
         self.set_gui_values()
 
@@ -174,8 +180,15 @@ class GUI(tk.Tk):
         try:
             # Versuche, den Inhalt der Queue abzurufen
             matrix, stats = self.framequeue.get_nowait()
-            valmax, avg, valmix, n_sens, roomnum = stats
-            self.put_text(f"Min:     {valmax} \nAverage: {avg} \nMax:     {valmix} \nSensors: {n_sens}\nActive Controllers: {roomnum}", delete=True)
+            valmax, avg, valmin, n_sens, roomnum = stats
+            message = f"Min:     {valmax} \nAverage: {avg} \nMax:     {valmin} \nSensors: {n_sens}\nActive Controllers: {roomnum}"
+            if avg and self.settings["parameter"] == "power":
+                overall_power = float(avg) * float(roomnum)
+                message += f"\nEstimated total power draw: {str(overall_power)[:5]}W"
+            self.put_text(message, delete=True)
+            if valmin and valmax and self.settings["normalize"] == "Autorange":
+                self.settings["paramrange"][self.settings["parameter"]] = [valmax, valmin]
+                self.update_param_range()
             self.update_canvas(matrix)
             
         except queue.Empty:
@@ -193,7 +206,7 @@ class GUI(tk.Tk):
     
     def set_gui_values(self):
         self.dropdown1.set(self.settings["parameter"])
-        self.dropdown2.set(self.settings["show_api"])
+        self.dropdown2.set(self.settings["normalize"])
         self.dropdown3.set(self.settings["color_gradient"])
         self.input1.delete(0, tk.END)
         self.input2.delete(0, tk.END)
@@ -205,6 +218,8 @@ class GUI(tk.Tk):
         self.input4.insert(0, self.settings["token"])
         
     def update_param_range(self):
+        self.input1.delete(0, tk.END)
+        self.input2.delete(0, tk.END)
         self.input1.insert(0, self.settings["paramrange"][self.settings["parameter"]][0])
         self.input2.insert(0, self.settings["paramrange"][self.settings["parameter"]][1])
         
@@ -216,7 +231,7 @@ class GUI(tk.Tk):
 
     def on_dropdown2_change(self, event):
         new_value = self.dropdown2.get()
-        self.settings["show_api"] = new_value
+        self.settings["normalize"] = new_value
         self.set_gui_values()
         save_to_file(self.settings)
 

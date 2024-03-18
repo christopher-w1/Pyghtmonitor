@@ -41,7 +41,7 @@ class LHFilter:
                 for key in self.rooms:
                     #print(self.rooms[key]["controllermetrics"])
                     if "coretemperature" in self.rooms[key]["controllermetrics"]:
-                        rooms[key] = float(self.rooms[key]["controllermetrics"]["coretemperature"][:4])/100
+                        rooms[key] = float(self.rooms[key]["controllermetrics"]["coretemperature"][:5])
                     elif "temperature" in self.rooms[key]["controllermetrics"]:
                         rooms[key] = float(self.rooms[key]["controllermetrics"]["temperature"]) + 20 if float(self.rooms[key]["controllermetrics"]["temperature"]) != 0 else None
                     else:
@@ -50,7 +50,7 @@ class LHFilter:
                 for key in self.rooms:
                     #print(self.rooms[key]["controllermetrics"])
                     if "voltage" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["voltage"][:2] + "." + self.rooms[key]["controllermetrics"]["current"][2:4]
+                        raw_value = self.rooms[key]["controllermetrics"]["voltage"]#[:2] + "." + self.rooms[key]["controllermetrics"]["current"][2:4]
                         rooms[key] = float(raw_value)
                     else:
                         rooms[key] = None
@@ -58,9 +58,31 @@ class LHFilter:
                 for key in self.rooms:
                     #print(self.rooms[key]["controllermetrics"])
                     if "current" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["current"][:1] + "." + self.rooms[key]["controllermetrics"]["current"][1:4]
+                        raw_value = self.rooms[key]["controllermetrics"]["current"]#[:1] + "." + self.rooms[key]["controllermetrics"]["current"][1:4]
                         rooms[key] = float(raw_value)
                     else:
+                        rooms[key] = None
+            case "power":
+                for key in self.rooms:
+                    if "power" in self.rooms[key]["controllermetrics"]:
+                        raw_value = self.rooms[key]["controllermetrics"]["power"]
+                        rooms[key] = float(raw_value) if raw_value else None
+                    else:
+                        rooms[key] = None
+            case "board_temperature":
+                for key in self.rooms:
+                    if "boardtemperature" in self.rooms[key]["controllermetrics"]:
+                        raw_value = self.rooms[key]["controllermetrics"]["boardtemperature"]
+                        rooms[key] = float(raw_value) if raw_value else None
+                    else:
+                        rooms[key] = None
+            case "ping":
+                for key in self.rooms:
+                    if "pinglatencyms" in self.rooms[key]["controllermetrics"]:
+                        raw_value = self.rooms[key]["controllermetrics"]["pinglatencyms"]
+                        rooms[key] = float(raw_value) if raw_value else None
+                    else:
+                        #print(self.rooms[key]["controllermetrics"])
                         rooms[key] = None
                     
         return rooms   
