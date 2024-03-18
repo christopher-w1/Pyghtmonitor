@@ -172,24 +172,30 @@ class GUI(tk.Tk):
         self.add_rooms(responding)
     
     def add_rooms(self, responding=None):
-        blinker = int(monotonic())
+        blinker = 0 # int(monotonic()) // 2
         controllers = self.mapper.map_controllers()
         xoff = self.scale_x / 2 + 2
         yoff = self.scale_y / 2
         last = ""
         for j in range(14):
+            left_bound = 0
             for i in range(28):
                 label = controllers[j][i]
                 x = i * self.scale_x + xoff
                 y = j * self.scale_y + yoff
                 color = "white"
                 if responding and label not in responding:
-                    color = "red" if blinker % 3 == 0 else"darkgrey"
+                    color = "darkred" if blinker % 2 == 0 else"darkgrey"
                     
                 if last != label:
-                    self.canvas.create_text(x+2, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
-                    self.canvas.create_text(x, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
+                    self.canvas.create_rectangle(x, y, x+self.scale_x*(left_bound-i)-1, y+0.5*self.scale_y+1, fill=None, outline="black")
+                    if i > 0:
+                        self.canvas.create_rectangle(x, y, x+1, y+0.5*self.scale_y+1, fill=None, outline="black")
+                    self.canvas.create_text(x+4, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
+                    self.canvas.create_text(x+2, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
+                    left_bound = i
                 last = label
+            self.canvas.create_rectangle(x+self.scale_x*(left_bound-i), y, 28*self.scale_x+xoff, y+0.5*self.scale_y+1, fill=None, outline="black")
     
     def update_queue_content(self):
         try:
@@ -219,7 +225,7 @@ class GUI(tk.Tk):
         finally:
             # Führe diese Funktion erneut nach 1000 Millisekunden (1 Sekunde) aus
             if self.monitoring:
-                self.after(1000, self.update_queue_content)
+                self.after(950, self.update_queue_content)
             else:
                 self.put_text("Background service stopped.")
                 
