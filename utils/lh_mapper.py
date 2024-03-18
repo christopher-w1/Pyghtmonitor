@@ -21,9 +21,6 @@ class WindowMapper:
 
             self.map_controllers()
             
-            #for line in self.controller_matrix:
-            #    print(line)
-            
     def map_controllers(self):
         for room in self.clients:
             client = self.clients[room]
@@ -36,7 +33,3 @@ class WindowMapper:
                 y = i // 28
                 self.controller_matrix[y][x] = room
         return self.controller_matrix
-                
-if __name__=="__main__":
-    wm = WindowMapper()
-    wm.read_yaml()

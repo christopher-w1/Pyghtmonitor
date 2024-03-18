@@ -1,6 +1,6 @@
 from threading import Thread, Lock
 from websocket import WebSocketApp, setdefaulttimeout, ABNF
-from msgpack import packb, unpackb, unpack
+from msgpack import packb, unpackb
 from ssl import CERT_NONE
 
 
@@ -28,8 +28,7 @@ class WSConnector:
         self.reid = self.REID()
         self.running = False
         self.ignore_ssl_cert = ignore_ssl_cert
-        self.last_message = ""
-        self.data = None
+        self.data = {}
         setdefaulttimeout(60)
 
     def send(self, verb, data):
@@ -68,7 +67,6 @@ class WSConnector:
         if isinstance(msg, bytes):
             msg = unpackb(msg, strict_map_key=False)
             #print(type(msg))
-            self.last_message = str(msg)
             self.data = msg
 
     def construct_package(self, verb: str, payload_data):

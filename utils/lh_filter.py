@@ -5,18 +5,32 @@ class LHFilter:
         self.interfacer  = Interfacer(username, token)
         self.rooms       = {}
         self.last_update = {}
+        self.controller_keys = []
         self.update()
-        
+                
     def update(self):
         new_rooms = self.interfacer.get_rooms(only_responding=True)
         if new_rooms: 
             #print(f"{len(new_rooms)} rooms responding")
             #print(self.last_update)
             
-            for key in new_rooms:
-                value = new_rooms[key]
-                self.rooms[key] = value
-                self.last_update[key] = monotonic()
+            for room in new_rooms:
+                value = new_rooms[room]
+                self.rooms[room] = value
+                self.last_update[room] = monotonic()
+                
+    def get_controller_keys(self):
+        for room in self.rooms.values():
+            if "controller_metrics" in room:
+                for metric in room["controller_metrics"]:
+                    if (room["controller_metrics"][metric] 
+                        and not metric in self.controller_keys):
+                        self.controller_keys.append(str(metric))
+                        print(metric)
+            else:
+                print(room)
+        print("Keys:", self.controller_keys)
+        return self.controller_keys
                 
     def time_since_response(self):
         response_times = {}
@@ -30,89 +44,46 @@ class LHFilter:
         rooms = {}
         
         match metric:
-            case "responding":
+            case "[Controller Active]":
                 resplist = self.time_since_response()
                 for key in resplist:
                     rooms[key] = True if resplist[key] < 5 else False
-            case "api_version":
+            case "[Lamps Per Controller]":
                 for key in self.rooms:
-                    rooms[key] = self.rooms[key]["apiversion"]
-            case "core_temperature":
-                for key in self.rooms:
-                    #print(self.rooms[key]["controllermetrics"])
-                    if "coretemperature" in self.rooms[key]["controllermetrics"]:
-                        rooms[key] = float(self.rooms[key]["controllermetrics"]["coretemperature"][:5])
-                    elif "temperature" in self.rooms[key]["controllermetrics"]:
-                        rooms[key] = float(self.rooms[key]["controllermetrics"]["temperature"]) + 20 if float(self.rooms[key]["controllermetrics"]["temperature"]) != 0 else None
-                    else:
-                        rooms[key] = None
-            case "voltage":
-                for key in self.rooms:
-                    #print(self.rooms[key]["controllermetrics"])
-                    if "voltage" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["voltage"]#[:2] + "." + self.rooms[key]["controllermetrics"]["current"][2:4]
-                        rooms[key] = float(raw_value)
-                    else:
-                        rooms[key] = None
-            case "current":
-                for key in self.rooms:
-                    #print(self.rooms[key]["controllermetrics"])
-                    if "current" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["current"]#[:1] + "." + self.rooms[key]["controllermetrics"]["current"][1:4]
-                        rooms[key] = float(raw_value)
-                    else:
-                        rooms[key] = None
-            case "power":
-                for key in self.rooms:
-                    if "power" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["power"]
-                        rooms[key] = float(raw_value) if raw_value else None
-                    else:
-                        rooms[key] = None
-            case "board_temperature":
-                for key in self.rooms:
-                    if "boardtemperature" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["boardtemperature"]
-                        rooms[key] = float(raw_value) if raw_value else None
-                    else:
-                        rooms[key] = None
-            case "ping":
-                for key in self.rooms:
-                    if "pinglatencyms" in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"]["pinglatencyms"]
-                        rooms[key] = float(raw_value) if raw_value else None
-                    else:
-                        #print(self.rooms[key]["controllermetrics"])
-                        rooms[key] = None
-            case "n_lamps":
-                for key in self.rooms:
-                    if "lampmetrics" in self.rooms[key]:
-                        raw_value = self.rooms[key]["lampmetrics"]
+                    if "lamp_metrics" in self.rooms[key]:
+                        raw_value = self.rooms[key]["lamp_metrics"]
                         rooms[key] = int(len(raw_value)) if raw_value else None
                     else:
                         #print(self.rooms[key].keys())
                         rooms[key] = None#lamp_metrics
-            case "power/lamps":
+            case "[Power Per Lamp]":
                 for key in self.rooms:
-                    if "power" in self.rooms[key]["controllermetrics"] and "lampmetrics" in self.rooms[key]:
-                        power_value = float(self.rooms[key]["controllermetrics"]["power"])
-                        lamp_value = max(float(len(self.rooms[key]["lampmetrics"])), 1)
+                    if "power" in self.rooms[key]["controller_metrics"] and "lamp_metrics" in self.rooms[key]:
+                        power_value = float(self.rooms[key]["controller_metrics"]["power"])
+                        lamp_value = max(float(len(self.rooms[key]["lamp_metrics"])), 1)
                         rooms[key] = power_value / lamp_value
+                    else:
+                        rooms[key] = None
+            case "[API Version]":
+                for key in self.rooms:
+                    if "api_version" in self.rooms[key]:
+                        raw_value = self.rooms[key]["api_version"]
+                        rooms[key] = int(raw_value) if raw_value and str(raw_value).isnumeric() else None
                     else:
                         rooms[key] = None
             case _ :
                 for key in self.rooms:
-                    if metric.replace("_", "") in self.rooms[key]["controllermetrics"]:
-                        raw_value = self.rooms[key]["controllermetrics"][metric.replace("_", "")]
-                        if raw_value:
-                            if str(raw_value).isnumeric():
-                                rooms[key] = int(raw_value)
-                            else:
-                                rooms[key] = float(raw_value) 
-                        else: 
-                            rooms[key] = None
-                    else:
-                        rooms[key] = None
+                    rooms[key] = None
+                    if metric in self.rooms[key]["controller_metrics"]:
+                        raw_value = self.rooms[key]["controller_metrics"][metric]
+                        try:
+                            if raw_value:
+                                if str(raw_value).isnumeric():
+                                    rooms[key] = int(raw_value)
+                                else:
+                                    rooms[key] = float(raw_value) 
+                        except Exception as e:
+                            pass
                     
         return rooms   
      
@@ -151,12 +122,3 @@ class LHFilter:
 
     def stop(self):
         self.interfacer.stop()
-        
-if __name__ == "__main__":
-    name = "chris1234"
-    token = "API-TOK_N/9u-eYpU-zTr0-bZDf-20s3"
-    filt = LHFilter(name, token)
-    for _ in range(10):
-        filt.update()
-        print(filt.get_metrics("voltage"))
-        sleep(1)

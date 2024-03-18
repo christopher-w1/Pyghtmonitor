@@ -8,27 +8,33 @@ from time import sleep, monotonic
 preset = {
     "user": "",
     "token": "",
-    "parameter": "responding",
-    "paramlist": ["responding", "api_version", "core_temperature", "voltage", "current"],
+    "parameter": "[Controller Active]",
     "paramrange": {
-        "responding": [0, 1],
-        "api_version": [1, 2],
-        "core_temperature": [20.0, 50.0],
-        "board_temperature": [20.0, 50.0],
-        "voltage": [10.0, 14.0], 
-        "current": [0.0, 1.2], 
-        "power": [0.0, 20.0], 
-        "ping": [0.0, 10.0],
-        "n_lamps": [0, 6],
-        "power/lamps": [0, 12],
-        "frames": [0, 100000],
-        "fps": [0, 178]
+        'id': [0, 255],
+        'error_color': [0, 0],
+        'is_responding': [1, 1],
+        'responding': [1, 1],
+        'ping_latency_ms': [2, 32],
+        'firmware_version': [5, 10],
+        'uptime': [0, 500000],
+        'frames': [0, 500000],
+        'core_temperature': [20, 70],
+        'board_temperature': [20, 50],
+        'shunt_voltage': [0, 0.1],
+        'voltage': [12, 15],
+        'power': [0, 80],
+        'current': [0, 8],
+        "[Controller Active]": [1, 1], 
+        "[Lamps Per Controller]": [0, 6], 
+        "[Power Per Lamp]": [0, 12], 
+        "[API Version]": [1, 2]
     },
-    "color_gradient": "Green->Red",
-    "show_api": "All",
+    "color_gradient": "Blue->Red",
     "keep_running": "False",
     "normalize": "Custom Range"
 }
+
+params = ["[Controller Active]", "[Lamps Per Controller]", "[Power Per Lamp]", "[API Version]"]
 
 def save_to_file(data, filename="appconfig.json"):
     with open(filename, "w") as file:
@@ -71,7 +77,7 @@ class GUI(tk.Tk):
         bold_font = ("Helvetica", 10, "bold")
 
         ttk.Label(frame, text="Parameter").grid(row=0, column=1, padx=5, pady=5)
-        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping", "n_lamps", "power/lamps", "frames", "fps"])
+        self.dropdown1 = ttk.Combobox(frame, values=params)
         self.dropdown1.grid(row=0, column=2, padx=5, pady=5)
 
         ttk.Label(frame, text="Range").grid(row=1, column=1, padx=5, pady=5)
@@ -197,10 +203,15 @@ class GUI(tk.Tk):
                 last = label
             #self.canvas.create_rectangle(x+self.scale_x*(left_bound-i), y, 28*self.scale_x+xoff, y+0.5*self.scale_y+1, fill=None, outline="black")
     
-    def update_queue_content(self):
+    def read_from_queue(self):
         try:
             # Versuche, den Inhalt der Queue abzurufen
-            matrix, stats, responding = self.framequeue.get_nowait()
+            matrix, stats, responding, ckeys = self.framequeue.get_nowait()
+            if ckeys and len(ckeys) > len(params):
+                for key in ckeys:
+                    if not key in params:
+                        params.append(key)
+                self.dropdown1.config(values=params)
             self.timeout = 10
             while not self.framequeue.empty():
                 self.framequeue.get_nowait()
@@ -226,7 +237,7 @@ class GUI(tk.Tk):
         finally:
             # Führe diese Funktion erneut nach 1000 Millisekunden (1 Sekunde) aus
             if self.monitoring:
-                self.after(950, self.update_queue_content)
+                self.after(950, self.read_from_queue)
             else:
                 self.put_text("Background service stopped.")
                 
@@ -278,17 +289,15 @@ class GUI(tk.Tk):
 
     def on_input1_change(self, event):
         new_value = self.input1.get()
-        if new_value != self.settings["paramrange"][self.settings["parameter"]][1]:
-            self.settings["paramrange"][self.settings["parameter"]][0] = new_value
-            self.set_gui_values()
-            save_to_file(self.settings)
+        self.settings["paramrange"][self.settings["parameter"]][0] = new_value
+        self.set_gui_values()
+        save_to_file(self.settings)
 
     def on_input2_change(self, event):
         new_value = self.input2.get()
-        if new_value != self.settings["paramrange"][self.settings["parameter"]][0]:
-            self.settings["paramrange"][self.settings["parameter"]][1] = new_value
-            self.set_gui_values()
-            save_to_file(self.settings)
+        self.settings["paramrange"][self.settings["parameter"]][1] = new_value
+        self.set_gui_values()
+        save_to_file(self.settings)
 
     def on_input3_change(self, event):
         new_value = self.input3.get()
@@ -313,7 +322,7 @@ class GUI(tk.Tk):
             self.thread = threading.Thread(target=self.service.run)
             self.thread.start()  # Thread starten
             self.put_text("Background service started successfully.", delete=True)
-            self.update_queue_content()
+            self.read_from_queue()
             super().title("Lighthouse Monitor - LIVE")
         else:
             self.stop_service
@@ -332,7 +341,3 @@ class GUI(tk.Tk):
         self.stop_service()
         sleep(0.1)
         self.destroy()
-
-if __name__ == "__main__":
-    app = GUI()
-    app.mainloop()

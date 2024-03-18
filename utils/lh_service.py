@@ -13,6 +13,7 @@ class BackgroundService(threading.Thread):
         self.keep_running = True
         self.mapper = WindowMapper()
         self.mapper.read_yaml()
+        self.controller_keys = []
         
     def grey_matrix(self):
         matrix = []
@@ -39,6 +40,9 @@ class BackgroundService(threading.Thread):
             color2 = inverted
         
         total_distance = threshold - expected
+        
+        if total_distance == 0: return color1
+        
         distance_from_expected = abs(value - expected)
         blend_ratio = distance_from_expected / total_distance
 
@@ -48,9 +52,8 @@ class BackgroundService(threading.Thread):
             int(color1[i] * (1 - blend_ratio) + color2[i] * blend_ratio)
             for i in range(3)]
         
-        #max_brightness = (max(blended_color) + 255)//2
         for i in range(3):
-            blended_color[i] = min(255, blended_color[i]) #* 255 // max_brightness)
+            blended_color[i] = min(255, blended_color[i])
         
         return tuple(blended_color)
     
@@ -65,7 +68,10 @@ class BackgroundService(threading.Thread):
                 room = controllers[y][x]
                 if room in metrics:
                     value = metrics[room]
-                    color = self.blend_colors(prange[0], prange[1], value, self.color1, self.color2)
+                    if prange[0] != prange[1]:
+                        color = self.blend_colors(prange[0], prange[1], value, self.color1, self.color2)
+                    else:
+                        color = self.color1
                 ls.append(color)
             matrix.append(ls)
         return matrix
@@ -137,28 +143,24 @@ class BackgroundService(threading.Thread):
                 if not min_val or numval < min_val: min_val = numval
                 if not max_val or numval > max_val: max_val = numval
                 sum = numval if not sum else sum + numval
-            #else:
-            #    print(val, "is not numeric")
+            
         avg = sum/len(valuelist) if sum else None
         return (self.shorten(str(min_val)), self.shorten(str(avg)), self.shorten(str(max_val)), len(valuelist), len(metrics))
     
     def run(self):
-        #print("Test")
         self.keep_running = True
         while self.keep_running:
             self.refresh_config()
             param, param_range = self.param_and_range()
-            #print("Parameter: ", param)
             self.filter.update()
             controller_metrics = self.filter.get_metrics(param)
+            if self.controller_keys == []:
+                self.controller_keys = self.filter.get_controller_keys()
             if controller_metrics:
-                #print(controller_metrics)
                 matrix = self.filled_matrix(param_range, controller_metrics)
                 stats  = self.min_avg_max_len(controller_metrics)
                 responding = controller_metrics.keys()
-                self.framequeue.put([matrix, stats, responding])
-                
+                self.framequeue.put([matrix, stats, responding, self.controller_keys])
             self.keep_running = self.config["keep_running"]
-            
             sleep(self.interval)
         self.stop()
