@@ -2,6 +2,7 @@ import tkinter as tk
 import json, threading, queue
 from tkinter import ttk
 from utils.lh_service import BackgroundService
+from utils.lh_mapper import WindowMapper
 from time import sleep
 
 preset = {
@@ -42,9 +43,11 @@ class GUI(tk.Tk):
         self.scale_y = 32
         self.scale_x = 15
 
-        self.canvas = tk.Canvas(self, width=29*self.scale_x, height=15*self.scale_y, bg="white")
+        self.canvas = tk.Canvas(self, width=29*self.scale_x, height=15*self.scale_y, bg="black")
         self.canvas.grid(row=0, column=0, padx=10, pady=10, rowspan=11, columnspan=1, sticky="ns")
 
+        self.mapper = WindowMapper()
+        self.mapper.read_yaml()
         self.update_canvas()
 
         frame = tk.Frame(self)
@@ -137,11 +140,10 @@ class GUI(tk.Tk):
     def update_canvas(self, matrix=None):
         xoff = self.scale_x / 2 + 2
         yoff = self.scale_y / 2
-        colors = ["#FFFFFF", "#000000"]  # white and black
         
         self.canvas.delete("all")
-        self.canvas.create_rectangle(xoff/2, yoff/2, 28*self.scale_x+xoff*1.5, 15*self.scale_y+yoff, fill="#ccc", outline="")
-
+        self.canvas.create_rectangle(xoff/2, yoff/2, 28*self.scale_x+xoff*1.5, 15*self.scale_y+yoff, fill="#444", outline="")
+        controllers = self.mapper.map_controllers()
         for j in range(14):
             for i in range(28):
                 x = i * self.scale_x + xoff
@@ -149,7 +151,22 @@ class GUI(tk.Tk):
                 color = "#%02x%02x%02x" % (127, 127, 127)
                 if matrix:
                     color = "#%02x%02x%02x" % matrix[j][i]
-                self.canvas.create_rectangle(x, y, x+self.scale_x-1, y+0.5*self.scale_y-1, fill=color, outline="")
+                self.canvas.create_rectangle(x, y, x+self.scale_x-1, y+0.5*self.scale_y-1, fill=color, outline="black")
+        self.add_rooms()
+    
+    def add_rooms(self):
+        controllers = self.mapper.map_controllers()
+        xoff = self.scale_x / 2 + 2
+        yoff = self.scale_y / 2
+        last = ""
+        for j in range(14):
+            for i in range(28):
+                label = controllers[j][i]
+                x = i * self.scale_x + xoff
+                y = j * self.scale_y + yoff
+                if last != label:
+                    self.canvas.create_text(x, y, text=label, font=("Roboto Condensed", 10, "bold"), fill="white", anchor="nw")
+                last = label
     
     def update_queue_content(self):
         try:

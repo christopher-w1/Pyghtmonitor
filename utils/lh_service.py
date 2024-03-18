@@ -26,7 +26,7 @@ class BackgroundService(threading.Thread):
     def blend_colors(self, expected, threshold, value, color1, color2):
         
         if not value:
-            return (127,127,192)
+            return (127,127,144)
         
         expected = float(expected)
         threshold = float(threshold)
@@ -54,7 +54,7 @@ class BackgroundService(threading.Thread):
         for y in range(14):
             ls = []
             for x in range(28):
-                color = (127, 127, 127)
+                color = (32, 32, 32)
                 controllers = self.mapper.map_controllers()
                 room = controllers[y][x]
                 if room in metrics:

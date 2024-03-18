@@ -21,8 +21,8 @@ class WindowMapper:
 
             self.map_controllers()
             
-            for line in self.controller_matrix:
-                print(line)
+            #for line in self.controller_matrix:
+            #    print(line)
             
     def map_controllers(self):
         for room in self.clients:
