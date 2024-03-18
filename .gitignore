@@ -4,6 +4,4 @@
 /jsonerror.log
 /listresponse.txt
 /__pycache__
-utils/__pycache__/lh_gui.cpython-311.pyc
-utils/__pycache__/lh_mapper.cpython-311.pyc
-utils/__pycache__/lh_service.cpython-311.pyc
+utils/__pycache__
