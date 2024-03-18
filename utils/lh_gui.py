@@ -41,7 +41,9 @@ class GUI(tk.Tk):
         super().__init__()
         
         self.scale_y = 32
-        self.scale_x = 15
+        self.scale_x = 20
+        
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.canvas = tk.Canvas(self, width=29*self.scale_x, height=15*self.scale_y, bg="black")
         self.canvas.grid(row=0, column=0, padx=10, pady=10, rowspan=11, columnspan=1, sticky="ns")
@@ -266,6 +268,13 @@ class GUI(tk.Tk):
         self.settings["keep_running"] = False
         self.put_text("Terminating service...")
         save_to_file(self.settings)
+        
+    def on_close(self):
+        # Aktion ausführen, wenn das Fenster geschlossen wird
+        self.put_text("Terminating!")
+        self.stop_service()
+        sleep(0.1)
+        self.destroy()
 
 if __name__ == "__main__":
     app = GUI()
