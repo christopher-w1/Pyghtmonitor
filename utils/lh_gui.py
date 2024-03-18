@@ -48,7 +48,7 @@ class GUI(tk.Tk):
     def __init__(self):
         super().__init__()
         super().title("Lighthouse Monitor - Inactive")
-        
+        super().iconphoto(True, tk.PhotoImage(file="lh.png"))
         self.scale_y = 40
         self.scale_x = 20
         
