@@ -193,6 +193,8 @@ class GUI(tk.Tk):
         try:
             # Versuche, den Inhalt der Queue abzurufen
             matrix, stats, responding = self.framequeue.get_nowait()
+            while not self.framequeue.empty():
+                self.framequeue.get_nowait()
             valmax, avg, valmin, n_sens, roomnum = stats
             message = f"Min:     {valmax} \nAverage: {avg} \nMax:     {valmin} \nSensors: {n_sens}\nActive Controllers: {roomnum}"
             if avg and self.settings["parameter"] == "power":
@@ -319,7 +321,7 @@ class GUI(tk.Tk):
         # Aktion ausführen, wenn das Fenster geschlossen wird
         self.put_text("Terminating!")
         self.stop_service()
-        sleep(0.2)
+        sleep(0.1)
         self.destroy()
 
 if __name__ == "__main__":
