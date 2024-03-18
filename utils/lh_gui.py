@@ -168,7 +168,7 @@ class GUI(tk.Tk):
                 color = "#%02x%02x%02x" % (127, 127, 127)
                 if matrix:
                     color = "#%02x%02x%02x" % matrix[j][i]
-                self.canvas.create_rectangle(x, y, x+self.scale_x-1, y+0.5*self.scale_y-1, fill=color, outline="black")
+                self.canvas.create_rectangle(x, y, x+self.scale_x-1, y+0.5*self.scale_y-1, fill=color, outline="")
         self.add_rooms(responding)
     
     def add_rooms(self, responding=None):
@@ -190,7 +190,7 @@ class GUI(tk.Tk):
                 if last != label:
                     #self.canvas.create_rectangle(x, y, x+self.scale_x*(left_bound-i)-1, y+0.5*self.scale_y+1, fill=None, outline="black")
                     if i > 0:
-                        self.canvas.create_rectangle(x-1, y, x+1, y+0.5*self.scale_y+0, fill=None, outline="#444")
+                        self.canvas.create_rectangle(x-1, y, x, y+0.5*self.scale_y+0, fill=None, outline="#444")
                     self.canvas.create_text(x+4, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
                     self.canvas.create_text(x+2, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
                     left_bound = i
