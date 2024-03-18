@@ -201,6 +201,7 @@ class GUI(tk.Tk):
         try:
             # Versuche, den Inhalt der Queue abzurufen
             matrix, stats, responding = self.framequeue.get_nowait()
+            self.timeout = 10
             while not self.framequeue.empty():
                 self.framequeue.get_nowait()
             valmax, avg, valmin, n_sens, roomnum = stats
