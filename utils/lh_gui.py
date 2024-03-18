@@ -188,14 +188,14 @@ class GUI(tk.Tk):
                     color = "darkred" if blinker % 2 == 0 else"darkgrey"
                     
                 if last != label:
-                    self.canvas.create_rectangle(x, y, x+self.scale_x*(left_bound-i)-1, y+0.5*self.scale_y+1, fill=None, outline="black")
+                    #self.canvas.create_rectangle(x, y, x+self.scale_x*(left_bound-i)-1, y+0.5*self.scale_y+1, fill=None, outline="black")
                     if i > 0:
-                        self.canvas.create_rectangle(x, y, x+1, y+0.5*self.scale_y+1, fill=None, outline="black")
+                        self.canvas.create_rectangle(x-1, y, x+1, y+0.5*self.scale_y+0, fill=None, outline="#444")
                     self.canvas.create_text(x+4, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
                     self.canvas.create_text(x+2, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
                     left_bound = i
                 last = label
-            self.canvas.create_rectangle(x+self.scale_x*(left_bound-i), y, 28*self.scale_x+xoff, y+0.5*self.scale_y+1, fill=None, outline="black")
+            #self.canvas.create_rectangle(x+self.scale_x*(left_bound-i), y, 28*self.scale_x+xoff, y+0.5*self.scale_y+1, fill=None, outline="black")
     
     def update_queue_content(self):
         try:
