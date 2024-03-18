@@ -66,7 +66,7 @@ class GUI(tk.Tk):
         bold_font = ("Helvetica", 10, "bold")
 
         ttk.Label(frame, text="Parameter").grid(row=0, column=1, padx=5, pady=5)
-        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping", "n_lamps", "power/lamps"])
+        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping", "n_lamps", "power/lamps", "frames", "fps"])
         self.dropdown1.grid(row=0, column=2, padx=5, pady=5)
 
         ttk.Label(frame, text="Range").grid(row=1, column=1, padx=5, pady=5)

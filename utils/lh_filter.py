@@ -102,7 +102,11 @@ class LHFilter:
                         rooms[key] = None
             case _ :
                 for key in self.rooms:
-                    rooms[key] = None
+                    if metric.replace("_", "") in self.rooms[key]["controllermetrics"]:
+                        raw_value = self.rooms[key]["controllermetrics"][metric.replace("_", "")]
+                        rooms[key] = float(raw_value) if raw_value else None
+                    else:
+                        rooms[key] = None
                     
         return rooms   
      
