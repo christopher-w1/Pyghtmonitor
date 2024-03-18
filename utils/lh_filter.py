@@ -59,7 +59,7 @@ class LHFilter:
             case "[Power Per Lamp]":
                 for key in self.rooms:
                     if "power" in self.rooms[key]["controller_metrics"] and "lamp_metrics" in self.rooms[key]:
-                        power_value = float(self.rooms[key]["controller_metrics"]["power"])
+                        power_value = float(self.rooms[key]["controller_metrics"]["power"]) - 0.93
                         lamp_value = max(float(len(self.rooms[key]["lamp_metrics"])), 1)
                         rooms[key] = power_value / lamp_value
                     else:
