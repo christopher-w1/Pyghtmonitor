@@ -3,7 +3,7 @@ import json, threading, queue
 from tkinter import ttk
 from utils.lh_service import BackgroundService
 from utils.lh_mapper import WindowMapper
-from time import sleep
+from time import sleep, monotonic
 
 preset = {
     "user": "",
@@ -172,6 +172,7 @@ class GUI(tk.Tk):
         self.add_rooms(responding)
     
     def add_rooms(self, responding=None):
+        blinker = int(monotonic())
         controllers = self.mapper.map_controllers()
         xoff = self.scale_x / 2 + 2
         yoff = self.scale_y / 2
@@ -183,7 +184,8 @@ class GUI(tk.Tk):
                 y = j * self.scale_y + yoff
                 color = "white"
                 if responding and label not in responding:
-                    color = "red"
+                    color = "red" if blinker % 3 == 0 else"darkgrey"
+                    
                 if last != label:
                     self.canvas.create_text(x+2, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
                     self.canvas.create_text(x, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
