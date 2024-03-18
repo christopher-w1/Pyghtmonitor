@@ -19,7 +19,10 @@ preset = {
         "current": [0.0, 1.2], 
         "power": [0.0, 20.0], 
         "ping": [0.0, 10.0],
-        "n_lamps": [0, 6]
+        "n_lamps": [0, 6],
+        "power/lamps": [0, 12],
+        "frames": [0, 100000],
+        "fps": [0, 178]
     },
     "color_gradient": "Green->Red",
     "show_api": "All",

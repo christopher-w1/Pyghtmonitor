@@ -109,7 +109,7 @@ class BackgroundService(threading.Thread):
         sum       = None
         for val in metrics.values():
             if str(val).replace(".", "").isnumeric():
-                numval = float(val)
+                numval = float(val) if str(val).replace(".", "").isnumeric() else 0
                 valuelist.append(numval)
                 if not min_val or numval < min_val: min_val = numval
                 if not max_val or numval > max_val: max_val = numval
