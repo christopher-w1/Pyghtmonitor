@@ -29,6 +29,7 @@ class WSConnector:
         self.running = False
         self.ignore_ssl_cert = ignore_ssl_cert
         self.last_message = ""
+        self.data = None
         setdefaulttimeout(60)
 
     def send(self, verb, data):
@@ -66,8 +67,9 @@ class WSConnector:
     def _handle_msg(self, ws, msg):
         if isinstance(msg, bytes):
             msg = unpackb(msg, strict_map_key=False)
-            print(type(msg))
+            #print(type(msg))
             self.last_message = str(msg)
+            self.data = msg
 
     def construct_package(self, verb: str, payload_data):
         return {
