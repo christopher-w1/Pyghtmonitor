@@ -92,7 +92,11 @@ class BackgroundService(threading.Thread):
             
     def param_and_range(self):
         param = self.config["parameter"]
-        p_range = self.config["paramrange"][param]
+        if param in self.config["paramrange"]:
+            p_range = self.config["paramrange"][param]
+        else:
+            print(f"ERROR: Parameter {param} has no range!\n Using standard Range of 0..50")
+            p_range = [0, 50]
         return (param, p_range)
     
     def stop(self):
@@ -128,7 +132,8 @@ class BackgroundService(threading.Thread):
                 #print(controller_metrics)
                 matrix = self.filled_matrix(param_range, controller_metrics)
                 stats  = self.min_avg_max_len(controller_metrics)
-                self.framequeue.put([matrix, stats])
+                responding = controller_metrics.keys()
+                self.framequeue.put([matrix, stats, responding])
                 
             self.keep_running = self.config["keep_running"]
             

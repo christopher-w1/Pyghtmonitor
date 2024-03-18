@@ -84,6 +84,25 @@ class LHFilter:
                     else:
                         #print(self.rooms[key]["controllermetrics"])
                         rooms[key] = None
+            case "n_lamps":
+                for key in self.rooms:
+                    if "lampmetrics" in self.rooms[key]:
+                        raw_value = len(self.rooms[key]["lampmetrics"])
+                        rooms[key] = float(raw_value) if raw_value else None
+                    else:
+                        #print(self.rooms[key].keys())
+                        rooms[key] = None#lamp_metrics
+            case "power/lamps":
+                for key in self.rooms:
+                    if "power" in self.rooms[key]["controllermetrics"] and "lampmetrics" in self.rooms[key]:
+                        power_value = float(self.rooms[key]["controllermetrics"]["power"])
+                        lamp_value = max(float(len(self.rooms[key]["lampmetrics"])), 1)
+                        rooms[key] = power_value / lamp_value
+                    else:
+                        rooms[key] = None
+            case _ :
+                for key in self.rooms:
+                    rooms[key] = None
                     
         return rooms   
      

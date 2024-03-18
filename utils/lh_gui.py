@@ -18,7 +18,8 @@ preset = {
         "voltage": [10.0, 14.0], 
         "current": [0.0, 1.2], 
         "power": [0.0, 20.0], 
-        "ping": [0.0, 10.0]
+        "ping": [0.0, 10.0],
+        "n_lamps": [0, 6]
     },
     "color_gradient": "Green->Red",
     "show_api": "All",
@@ -65,7 +66,7 @@ class GUI(tk.Tk):
         bold_font = ("Helvetica", 10, "bold")
 
         ttk.Label(frame, text="Parameter").grid(row=0, column=1, padx=5, pady=5)
-        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping"])
+        self.dropdown1 = ttk.Combobox(frame, values=["responding", "api_version", "core_temperature", "board_temperature", "voltage", "current", "power", "ping", "n_lamps", "power/lamps"])
         self.dropdown1.grid(row=0, column=2, padx=5, pady=5)
 
         ttk.Label(frame, text="Range").grid(row=1, column=1, padx=5, pady=5)
@@ -145,7 +146,7 @@ class GUI(tk.Tk):
         else: save_to_file(preset)
         self.set_gui_values()
 
-    def update_canvas(self, matrix=None):
+    def update_canvas(self, matrix=None, responding=None):
         xoff = self.scale_x / 2 + 2
         yoff = self.scale_y / 2
         
@@ -160,9 +161,9 @@ class GUI(tk.Tk):
                 if matrix:
                     color = "#%02x%02x%02x" % matrix[j][i]
                 self.canvas.create_rectangle(x, y, x+self.scale_x-1, y+0.5*self.scale_y-1, fill=color, outline="black")
-        self.add_rooms()
+        self.add_rooms(responding)
     
-    def add_rooms(self):
+    def add_rooms(self, responding=None):
         controllers = self.mapper.map_controllers()
         xoff = self.scale_x / 2 + 2
         yoff = self.scale_y / 2
@@ -172,14 +173,18 @@ class GUI(tk.Tk):
                 label = controllers[j][i]
                 x = i * self.scale_x + xoff
                 y = j * self.scale_y + yoff
+                color = "white"
+                if responding and label not in responding:
+                    color = "red"
                 if last != label:
-                    self.canvas.create_text(x, y, text=label, font=("Roboto Condensed", 10, "bold"), fill="white", anchor="nw")
+                    self.canvas.create_text(x+2, y+2, text=label, font=("Roboto Condensed", 10, "bold"), fill="black", anchor="nw")
+                    self.canvas.create_text(x, y, text=label, font=("Roboto Condensed", 10, "bold"), fill=color, anchor="nw")
                 last = label
     
     def update_queue_content(self):
         try:
             # Versuche, den Inhalt der Queue abzurufen
-            matrix, stats = self.framequeue.get_nowait()
+            matrix, stats, responding = self.framequeue.get_nowait()
             valmax, avg, valmin, n_sens, roomnum = stats
             message = f"Min:     {valmax} \nAverage: {avg} \nMax:     {valmin} \nSensors: {n_sens}\nActive Controllers: {roomnum}"
             if avg and self.settings["parameter"] == "power":
@@ -189,11 +194,11 @@ class GUI(tk.Tk):
             if valmin and valmax and self.settings["normalize"] == "Autorange":
                 self.settings["paramrange"][self.settings["parameter"]] = [valmax, valmin]
                 self.update_param_range()
-            self.update_canvas(matrix)
+            self.update_canvas(matrix, responding)
             
         except queue.Empty:
             # Wenn die Queue leer ist, setze den Text entsprechend
-            self.put_text("Waiting for input data...")
+            self.put_text("Waiting for response...")
         finally:
             # Führe diese Funktion erneut nach 1000 Millisekunden (1 Sekunde) aus
             if self.monitoring:
@@ -212,8 +217,14 @@ class GUI(tk.Tk):
         self.input2.delete(0, tk.END)
         self.input3.delete(0, tk.END)
         self.input4.delete(0, tk.END)
-        self.input1.insert(0, self.settings["paramrange"][self.settings["parameter"]][0])
-        self.input2.insert(0, self.settings["paramrange"][self.settings["parameter"]][1])
+        if self.settings["parameter"] in self.settings["paramrange"]:
+            self.input1.insert(0, self.settings["paramrange"][self.settings["parameter"]][0])
+            self.input2.insert(0, self.settings["paramrange"][self.settings["parameter"]][1])
+        else:
+            self.settings["paramrange"][self.settings["parameter"]] = [0, 50]
+            self.input1.insert(0, self.settings["paramrange"][self.settings["parameter"]][0])
+            self.input2.insert(0, self.settings["paramrange"][self.settings["parameter"]][1])
+            save_to_file(self.settings)
         self.input3.insert(0, self.settings["user"])
         self.input4.insert(0, self.settings["token"])
         
