@@ -17,3 +17,5 @@ A simple tool for monitoring the lighthouse controllers' current state.
 ## Todo
 - Add a setting for the refresh intervall
 - Add a live view mode that streams the content currently displayed on the lighthouse
+- Add a console mode
+- Add a test option to make a lamp light up with a specific RGB Code
