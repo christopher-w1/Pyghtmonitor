@@ -14,6 +14,11 @@ A simple tool for monitoring the lighthouse controllers' current state.
 - **PyYaml**
 - A recent version of the lampservers config file as **"laserconfig.yaml"**. This is necessary for mapping the data to corresponding windows.
 
+## How to use
+After installing all prequisites, just doubleclick on "main.pyw" if you#re on windows or start it via terminal with "python3 main.pyw" if you're on linux.
+Enter your user name and your api token, then click on start monitoring. All available non-empty controller metrics will be added to the first dropdown menu ("Parameter")
+once a response from BEACON is received. 
+
 ## Todo
 - Add a setting for the refresh intervall
 - Add a live view mode that streams the content currently displayed on the lighthouse
