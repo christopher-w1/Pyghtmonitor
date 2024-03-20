@@ -9,7 +9,7 @@ class LHFilter:
         self.update()
                 
     def update(self):
-        new_rooms = self.interfacer.get_rooms(only_responding=True)
+        new_rooms = self.interfacer.get_rooms()
         if new_rooms: 
             #print(f"{len(new_rooms)} rooms responding")
             #print(self.last_update)
@@ -26,39 +26,39 @@ class LHFilter:
                     if (room["controller_metrics"][metric] 
                         and not metric in self.controller_keys):
                         self.controller_keys.append(str(metric))
-                        print(metric)
             else:
-                print(room)
-        print("Keys:", self.controller_keys)
+                print("Error: No metrics found for room {room}.")
+        if len(self.controller_keys) > 0:
+            print(f"Metrics found: {', '.join(self.controller_keys)}")
         return self.controller_keys
                 
     def time_since_response(self):
         response_times = {}
         current_time   = monotonic()
-        for key in self.last_update:
+        for key in self.get_responding():
             value = self.last_update[key]
             response_times[key] = current_time - value
         return response_times
     
     def get_metrics(self, metric: str):
         rooms = {}
-        
         match metric:
-            case "[Controller Active]":
-                resplist = self.time_since_response()
-                for key in resplist:
-                    rooms[key] = True if resplist[key] < 5 else False
+            case "[Time Since Response]":
+                rooms = self.time_since_response()
             case "[Lamps Per Controller]":
                 for key in self.rooms:
                     if "lamp_metrics" in self.rooms[key]:
                         raw_value = self.rooms[key]["lamp_metrics"]
-                        rooms[key] = int(len(raw_value)) if raw_value else None
+                        rooms[key] = int(len(raw_value)) if raw_value else 0
                     else:
-                        #print(self.rooms[key].keys())
-                        rooms[key] = None#lamp_metrics
+                        rooms[key] = None
             case "[Power Per Lamp]":
                 for key in self.rooms:
-                    if "power" in self.rooms[key]["controller_metrics"] and "lamp_metrics" in self.rooms[key]:
+                    # Check if all keys contain a value
+                    if ("power" in self.rooms[key]["controller_metrics"] 
+                        and self.rooms[key]["controller_metrics"]["power"]
+                        and "lamp_metrics" in self.rooms[key]
+                        and self.rooms[key]["lamp_metrics"]):
                         power_value = float(self.rooms[key]["controller_metrics"]["power"]) - 0.93
                         lamp_value = max(float(len(self.rooms[key]["lamp_metrics"])), 1)
                         rooms[key] = power_value / lamp_value
@@ -73,7 +73,6 @@ class LHFilter:
                         rooms[key] = None
             case _ :
                 for key in self.rooms:
-                    rooms[key] = None
                     if metric in self.rooms[key]["controller_metrics"]:
                         raw_value = self.rooms[key]["controller_metrics"][metric]
                         try:
@@ -83,9 +82,15 @@ class LHFilter:
                                 else:
                                     rooms[key] = float(raw_value) 
                         except Exception as e:
-                            pass
-                    
+                            rooms[key] = None
         return rooms   
+    
+    def get_responding(self) -> list:
+        responding_list = []
+        room_list = self.get_metrics("responding")
+        for key in room_list:
+            responding_list.append(key)
+        return responding_list
      
     def get_min_avg_max(self, param: str):
         metrics = self.get_metrics(param)

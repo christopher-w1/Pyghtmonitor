@@ -8,7 +8,7 @@ from time import sleep, monotonic
 preset = {
     "user": "",
     "token": "",
-    "parameter": "[Controller Active]",
+    "parameter": "[Time Since Response]",
     "paramrange": {
         'id': [0, 255],
         'error_color': [0, 0],
@@ -24,7 +24,7 @@ preset = {
         'voltage': [12, 15],
         'power': [0, 80],
         'current': [0, 8],
-        "[Controller Active]": [1, 1], 
+        "[Time Since Response]": [0, 5], 
         "[Lamps Per Controller]": [0, 6], 
         "[Power Per Lamp]": [0, 12], 
         "[API Version]": [1, 2]
@@ -34,7 +34,7 @@ preset = {
     "normalize": "Custom Range"
 }
 
-params = ["[Controller Active]", "[Lamps Per Controller]", "[Power Per Lamp]", "[API Version]"]
+params = ["[Time Since Response]", "[Lamps Per Controller]", "[Power Per Lamp]", "[API Version]"]
 
 def save_to_file(data, filename="appconfig.json"):
     with open(filename, "w") as file:
