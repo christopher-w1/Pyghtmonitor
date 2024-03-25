@@ -12,6 +12,7 @@ class Interfacer:
         self.connector = WSConnector(username, token, address, on_msg=print(),
                                      ignore_ssl_cert=ignore_ssl_cert)
         self.ph_thread = None
+        self.ordered_rooms = {}
         self.connector.start()
         
     def update(self):
@@ -35,17 +36,9 @@ class Interfacer:
             roomlist = response["PAYL"]["rooms"]
             ordered_rooms = {}
             for room_dict in roomlist:
-                """if not api_version or int(entry["api_version"]) == api_version:
-                    if ((not only_responding) 
-                        or int(entry["api_version"]) == 1 and bool(entry["controller_metrics"]["is_responding"])
-                        or int(entry["api_version"]) == 2 and bool(entry["controller_metrics"]["responding"])):
-                        roomdict[entry["room"]] = entry
-                        roomdict[entry["room"]].pop("room")
-                        if int(entry["api_version"]) == 1 and bool(entry["controller_metrics"]["is_responding"]):
-                            roomdict[entry["responding"]] = roomdict[entry["room"]].pop("is_responding")"""
-                if not room_dict:
+                if not room_dict or not "room" in room_dict:
                     print(f"Error: Response {room_dict} is has None-Type!")
-                else:
+                elif "room" in room_dict:
                     key = room_dict["room"]
                     ordered_rooms[key] = room_dict
                     ordered_rooms[key].pop("room")
@@ -56,8 +49,20 @@ class Interfacer:
                             ordered_rooms[key]["controller_metrics"].pop("is_responding")
                             ordered_rooms[key]["controller_metrics"]["responding"] = responding
                     #print(f'Room {key} is {"responding" if responding else "not responding"}')
-                       
+            self.ordered_rooms = ordered_rooms 
+            self.get_mapping()
+            #print("rooms:", ordered_rooms)
             return ordered_rooms
+        else:
+            print("Error: No room data")
+            #print(response)
+        
+    def get_mapping(self):
+        if len(self.ordered_rooms) == 0: return None
+        return 1
+        for room in self.ordered_rooms:
+            print(self.ordered_rooms[room])
+
         
     def stop(self):
         self.connector.stop()

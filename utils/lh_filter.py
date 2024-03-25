@@ -29,7 +29,8 @@ class LHFilter:
             else:
                 print("Error: No metrics found for room {room}.")
         if len(self.controller_keys) > 0:
-            print(f"Metrics found: {', '.join(self.controller_keys)}")
+            pass
+            #print(f"Metrics found: {', '.join(self.controller_keys)}")
         return self.controller_keys
                 
     def time_since_response(self):
