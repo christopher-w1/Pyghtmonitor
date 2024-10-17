@@ -14,6 +14,8 @@ class BackgroundService(threading.Thread):
         self.mapper = WindowMapper()
         self.mapper.read_yaml()
         self.controller_keys = []
+        self.color1 = (0, 0, 255)
+        self.color2 = (255, 0, 0)
         
     def grey_matrix(self):
         matrix = []
@@ -24,26 +26,26 @@ class BackgroundService(threading.Thread):
             matrix.append(ls)
         return matrix
     
-    def blend_colors(self, expected, threshold, value, color1, color2):
+    def blend_colors(self, threshold1, threshold2, value, color1, color2):
         
         if not value:
             return (127,127,144)
         
-        expected = float(expected)
-        threshold = float(threshold)
+        threshold1 = float(threshold1)
+        threshold2 = float(threshold2)
         value = float(value)
         
-        if value < expected:
+        if value < threshold1:
             inverted = []
             for i in range(len(color2)):
                 inverted.append(255-color2[i])
             color2 = inverted
         
-        total_distance = threshold - expected
+        total_distance = threshold2 - threshold1
         
         if total_distance == 0: return color1
         
-        distance_from_expected = abs(value - expected)
+        distance_from_expected = abs(value - threshold1)
         blend_ratio = distance_from_expected / total_distance
 
         blend_ratio = max(0, min(1, blend_ratio))
@@ -59,14 +61,14 @@ class BackgroundService(threading.Thread):
     
     def filled_matrix(self, prange: list, metrics: dict):
         matrix = []
-                
+        responding = self.filter.get_responding()
         for y in range(14):
             ls = []
             for x in range(28):
                 color = (32, 32, 32)
                 controllers = self.mapper.map_controllers()
                 room = controllers[y][x]
-                if room in metrics:
+                if room in metrics and room in responding:
                     value = metrics[room]
                     if prange[0] != prange[1]:
                         color = self.blend_colors(prange[0], prange[1], value, self.color1, self.color2)
@@ -159,7 +161,7 @@ class BackgroundService(threading.Thread):
             if controller_metrics:
                 matrix = self.filled_matrix(param_range, controller_metrics)
                 stats  = self.min_avg_max_len(controller_metrics)
-                responding = controller_metrics.keys()
+                responding = self.filter.get_responding()
                 self.framequeue.put([matrix, stats, responding, self.controller_keys])
             self.keep_running = self.config["keep_running"]
             sleep(self.interval)
