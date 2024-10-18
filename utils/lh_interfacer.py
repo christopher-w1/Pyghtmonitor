@@ -42,12 +42,13 @@ class Interfacer:
                     key = room_dict["room"]
                     ordered_rooms[key] = room_dict
                     ordered_rooms[key].pop("room")
-                    # Translate responding key from API v.1
-                    if "controller_metrics" in ordered_rooms[key] and ordered_rooms[key]["controller_metrics"]:
+                    if not "controller_metrics" in ordered_rooms[key] or not "responding" in ordered_rooms[key]["controller_metrics"]:
+                        ordered_rooms[key] = {'controller_metrics':{'responding': False}}
+                    """if "controller_metrics" in ordered_rooms[key] and ordered_rooms[key]["controller_metrics"]:
                         if "is_responding" in ordered_rooms[key]["controller_metrics"]:
                             responding = 1 if ordered_rooms[key]["controller_metrics"]["is_responding"] else 0
                             ordered_rooms[key]["controller_metrics"].pop("is_responding")
-                            ordered_rooms[key]["controller_metrics"]["responding"] = responding
+                            ordered_rooms[key]["controller_metrics"]["responding"] = responding"""
                     #print(f'Room {key} is {"responding" if responding else "not responding"}')
             self.ordered_rooms = ordered_rooms 
             self.get_mapping()
